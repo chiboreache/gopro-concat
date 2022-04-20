@@ -68,10 +68,13 @@ def clear_processed_files(clear_list):
 
 
 if __name__ == '__main__':
-    src = '/run/media/chibo/7000-8000/DCIM/100GOPRO/'
+
+    user_name = 'chibo'
+
+    src = f'/run/media/{user_name}/7000-8000/DCIM/100GOPRO/'
 
     tmp = '/tmp/gopro-concat/'
-    dst = '/home/chibo/GOPRO/'
+    dst = f'/home/{user_name}/GOPRO/'
 
     create_file_list(src)
     cc_result = concatination(dst)
