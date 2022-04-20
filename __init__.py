@@ -29,16 +29,19 @@ def concat(i, txt, dst):
     src = txt.resolve()
     command = f'ffmpeg -f concat -safe 0 -i {src} -c copy {dst}'
     status, _ = subprocess.getstatusoutput(command)  # output
-    print(f'#: {i:03}, path: {src.parent}, status: {status}')
+    print(f'#concat DONE: {src.parent} => {status}')
 
 
 def concatination(dst_root):
     start = datetime.now()
     gl = Path('/tmp/gopro-concat/').glob('**/*.txt')
     with Pool() as pool:
-        resls = list()
+        dst_ls = list()
+        res_ls = list()
         for i, txt in enumerate(gl):
             dst = f'{dst_root}{txt.parts[3]}.mp4'
+            dst_ls.append(dst)
+            print('#concatination: ', dst)
             res = pool.apply_async(
                 concat,
                 (
@@ -47,33 +50,37 @@ def concatination(dst_root):
                     dst,
                 ),
             )
-            resls.append(res)
-        print('res: ', [res.get() for res in resls])
-    print('\n### concatination DONE!\n\n')
+            res_ls.append(res)
+        [res.get() for res in res_ls]
+    print('\n### concatination DONE!')
 
     end = datetime.now()
     time_taken = end - start
-    print('Time: ', time_taken)
+    print('### time: ', time_taken)
+    print()
+
+    return dst_ls
 
 
-def clear_data(tmp=False, src=False):
-    if tmp:
-        subprocess.run(f'rm -rf {tmp}', shell=True)
-    if src:
-        subprocess.run(f'rm -rf {src}', shell=True)
+def clear_processed_files(clear_list):
+    for i in clear_list:
+        subprocess.run(f'rm -rf {i}', shell=True)
 
 
 if __name__ == '__main__':
     src = '/run/media/chibo/7000-8000/DCIM/100GOPRO/'
+
     tmp = '/tmp/gopro-concat/'
     dst = '/home/chibo/GOPRO/'
 
     create_file_list(src)
-    concatination(dst)
+    cc_result = concatination(dst)
+    files_existance = [Path(i).exists() for i in cc_result]
 
-    clear_data(
-        tmp=tmp,
-        # src=src,
-    )
+    print('cc_result: ', cc_result)
+    print('files_existance: ', files_existance)
+
+    if all(files_existance):
+        clear_processed_files([tmp, src])
 
     print('#DONE')
